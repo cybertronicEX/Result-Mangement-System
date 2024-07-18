@@ -10,6 +10,8 @@ include('config.php');
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user_id = $_SESSION['user_id'];
     $modules = $_POST['modules'];
+    $year = $_POST['year'];
+    $semester = $_POST['semester'];
 
     // Retrieve the student ID based on the logged-in user
     $sql = "SELECT id FROM students WHERE user_id = ?";
@@ -20,18 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->fetch();
     $stmt->close();
 
-    // Delete existing module selections for the student
-    $sql = "DELETE FROM student_modules WHERE student_id = ?";
+    // Delete existing module selections for the student for the given year and semester
+    $sql = "DELETE FROM student_modules WHERE student_id = ? AND year = ? AND semester = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $student_id);
+    $stmt->bind_param("iii", $student_id, $year, $semester);
     $stmt->execute();
     $stmt->close();
 
     // Insert new module selections for the student
-    $sql = "INSERT INTO student_modules (student_id, module_id) VALUES (?, ?)";
+    $sql = "INSERT INTO student_modules (student_id, module_id, year, semester) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     foreach ($modules as $module_id) {
-        $stmt->bind_param("ii", $student_id, $module_id);
+        $stmt->bind_param("iiii", $student_id, $module_id, $year, $semester);
         $stmt->execute();
     }
     $stmt->close();

@@ -7,7 +7,11 @@ if ($_SESSION['role'] != 'student') {
 include('navbar.php');
 include('config.php');
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$year = null;
+$semester = null;
+$modules = [];
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['find_modules'])) {
     $year = $_POST['year'];
     $semester = $_POST['semester'];
 
@@ -27,15 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bind_param("iii", $degree_id, $year, $semester);
     $stmt->execute();
     $result = $stmt->get_result();
-    $modules = [];
     while ($row = $result->fetch_assoc()) {
         $modules[] = $row;
     }
     $stmt->close();
-} else {
-    $year = null;
-    $semester = null;
-    $modules = [];
 }
 ?>
 
@@ -84,6 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         input[type="submit"]:hover {
             background-color: #003d80;
         }
+        .modules-select {
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -93,32 +98,62 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <label for="year">Year:</label>
             <select id="year" name="year" required>
                 <option value="" disabled selected>Select Year</option>
-                <option value="1">Year 1</option>
-                <option value="2">Year 2</option>
-                <option value="3">Year 3</option>
-                <option value="4">Year 4</option>
+                <option value="1" <?php if ($year == '1') echo 'selected'; ?>>Year 1</option>
+                <option value="2" <?php if ($year == '2') echo 'selected'; ?>>Year 2</option>
+                <option value="3" <?php if ($year == '3') echo 'selected'; ?>>Year 3</option>
+                <option value="4" <?php if ($year == '4') echo 'selected'; ?>>Year 4</option>
             </select>
 
             <label for="semester">Semester:</label>
             <select id="semester" name="semester" required>
                 <option value="" disabled selected>Select Semester</option>
-                <option value="1">Semester 1</option>
-                <option value="2">Semester 2</option>
+                <option value="1" <?php if ($semester == '1') echo 'selected'; ?>>Semester 1</option>
+                <option value="2" <?php if ($semester == '2') echo 'selected'; ?>>Semester 2</option>
             </select>
-            <input type="submit" value="Find Modules">
+            <input type="submit" name="find_modules" value="Find Modules">
         </form>
 
         <?php if (!empty($modules)): ?>
-            <form action="select_modules_action.php" method="POST">
-                <label for="modules">Modules:</label>
-                <select id="modules" name="modules[]" multiple required>
-                    <?php foreach ($modules as $module): ?>
-                        <option value="<?php echo $module['id']; ?>"><?php echo $module['module_name']; ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <input type="submit" value="Select Modules">
-            </form>
+            <div class="modules-select">
+                <h3>Available Modules for Year <?php echo htmlspecialchars($year); ?>, Semester <?php echo htmlspecialchars($semester); ?></h3>
+                <form action="select_modules_action.php" method="POST">
+                    <input type="hidden" name="year" value="<?php echo htmlspecialchars($year); ?>">
+                    <input type="hidden" name="semester" value="<?php echo htmlspecialchars($semester); ?>">
+                    <label for="modules">Modules (Select up to 4):</label>
+                    <select id="modules" name="modules[]" multiple required size="10">
+                        <?php foreach ($modules as $module): ?>
+                            <option value="<?php echo $module['id']; ?>"><?php echo $module['module_name']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="error" id="error-message" style="display: none;">You can select up to 4 modules only.</p>
+                    <input type="submit" value="Select Modules">
+                </form>
+            </div>
         <?php endif; ?>
     </div>
+    <script>
+        document.querySelector('form[action="select_modules_action.php"]').addEventListener('submit', function(event) {
+            var selectedModules = document.getElementById('modules').selectedOptions;
+            var selectedModuleValues = Array.from(selectedModules).map(option => option.value);
+            var uniqueModules = new Set(selectedModuleValues);
+
+            // Check if the number of selected modules is greater than 4
+            if (selectedModules.length > 4) {
+                document.getElementById('error-message').textContent = 'You can select up to 4 modules only.';
+                document.getElementById('error-message').style.display = 'block';
+                event.preventDefault();
+            } 
+            // Check if there are duplicate modules
+            else if (uniqueModules.size !== selectedModuleValues.length) {
+                document.getElementById('error-message').textContent = 'Duplicate module selections are not allowed.';
+                document.getElementById('error-message').style.display = 'block';
+                event.preventDefault();
+            } 
+            else {
+                document.getElementById('error-message').style.display = 'none';
+            }
+        });
+    </script>
+
 </body>
 </html>

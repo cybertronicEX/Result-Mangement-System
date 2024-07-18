@@ -91,6 +91,26 @@ include('config.php');
             document.getElementById('grade_module_id').value = moduleId;
             document.getElementById('gradeModal').style.display = 'block';
         }
+
+        function submitGrade(event) {
+            event.preventDefault();
+            var form = event.target;
+
+            var formData = new FormData(form);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var response = JSON.parse(this.responseText);
+                    alert(response.message);
+                    if (response.status === 'success') {
+                        window.location.href = 'exam_results.php';
+                    }
+                }
+            };
+            xhttp.open("POST", form.action, true);
+            xhttp.send(formData);
+        }
     </script>
 </head>
 <body>
@@ -146,7 +166,7 @@ include('config.php');
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Add/Update Grade</h3>
-            <form action="assign_grade.php" method="POST">
+            <form action="assign_grade.php" method="POST" onsubmit="submitGrade(event)">
                 <input type="hidden" id="grade_student_id" name="student_id">
                 <input type="hidden" id="grade_module_id" name="module_id">
                 <label for="grade">Grade:</label>
@@ -172,3 +192,4 @@ include('config.php');
     </div>
 </body>
 </html>
+
