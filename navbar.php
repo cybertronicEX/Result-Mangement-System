@@ -66,7 +66,7 @@ if (!isset($_SESSION['role'])) {
         <!-- Uncomment these lines when student navigation is needed -->
         
         <a href="student_dashboard.php" class="active">Dashboard</a>
-        <a href="select_modules.php">Select Modules</a>
+        <!-- <a href="select_modules.php">Select Modules</a> -->
         <a href="view_results.php">View Results</a>
        
     <?php endif; ?>

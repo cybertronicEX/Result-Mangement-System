@@ -66,30 +66,40 @@ include('config.php');
             padding: 5px 10px;
             cursor: pointer;
         }
+        button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
     </style>
     <script>
-        function showModal(studentId) {
-            // Load modules and grades for the student
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    document.getElementById('moduleContent').innerHTML = this.responseText;
-                    document.getElementById('viewModulesModal').style.display = 'block';
-                }
-            };
-            xhttp.open("GET", "get_student_modules.php?student_id=" + studentId, true);
-            xhttp.send();
+        function showModal(studentId, enrollYear, currentSemester) {
+            // Set the student ID, enroll year, and current semester for fetching modules
+            document.getElementById('filter_student_id').value = studentId;
+            document.getElementById('current_year').value = enrollYear;
+            document.getElementById('current_semester').value = currentSemester;
+
+            // Load modules for the student up to the current year and semester
+            fetchModules();
+            document.getElementById('viewModulesModal').style.display = 'block';
         }
 
         function closeModal() {
             document.getElementById('viewModulesModal').style.display = 'none';
             document.getElementById('gradeModal').style.display = 'none';
+            document.getElementById('midMarksModal').style.display = 'none';
         }
 
         function showGradeModal(studentId, moduleId) {
             document.getElementById('grade_student_id').value = studentId;
             document.getElementById('grade_module_id').value = moduleId;
             document.getElementById('gradeModal').style.display = 'block';
+        }
+
+        function showMidMarksModal(studentId, moduleId) {
+            document.getElementById('mid_marks_student_id').value = studentId;
+            document.getElementById('mid_marks_module_id').value = moduleId;
+            document.getElementById('midMarksModal').style.display = 'block';
         }
 
         function submitGrade(event) {
@@ -110,6 +120,41 @@ include('config.php');
             };
             xhttp.open("POST", form.action, true);
             xhttp.send(formData);
+        }
+
+        function submitMidMarks(event) {
+            event.preventDefault();
+            var form = event.target;
+
+            var formData = new FormData(form);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var response = JSON.parse(this.responseText);
+                    alert(response.message);
+                    if (response.status === 'success') {
+                        window.location.href = 'exam_results.php';
+                    }
+                }
+            };
+            xhttp.open("POST", form.action, true);
+            xhttp.send(formData);
+        }
+
+        function fetchModules() {
+            var studentId = document.getElementById('filter_student_id').value;
+            var currentYear = document.getElementById('current_year').value;
+            var currentSemester = document.getElementById('current_semester').value;
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    document.getElementById('moduleContent').innerHTML = this.responseText;
+                }
+            };
+            xhttp.open("GET", "get_student_modules.php?student_id=" + studentId + "&current_year=" + currentYear + "&current_semester=" + currentSemester, true);
+            xhttp.send();
         }
     </script>
 </head>
@@ -142,7 +187,7 @@ include('config.php');
                     <td>" . $row['degree_name'] . "</td>
                     <td>" . $row['enroll_year'] . "</td>
                     <td>" . $row['current_semester'] . "</td>
-                    <td><button onclick='showModal(" . $row['id'] . ")'>View Modules</button></td>
+                    <td><button onclick='showModal(" . $row['id'] . ", " . $row['enroll_year'] . ", " . $row['current_semester'] . ")'>View Modules</button></td>
                   </tr>";
         }
         echo "</table>";
@@ -157,6 +202,9 @@ include('config.php');
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h3>Modules and Grades</h3>
+            <input type="hidden" id="filter_student_id" name="student_id">
+            <input type="hidden" id="current_year" name="current_year">
+            <input type="hidden" id="current_semester" name="current_semester">
             <div id="moduleContent"></div>
         </div>
     </div>
@@ -190,6 +238,20 @@ include('config.php');
             </form>
         </div>
     </div>
+
+    <!-- Modal dialog for adding/updating mid marks -->
+    <div id="midMarksModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Add/Update Mid Marks</h3>
+            <form action="assign_mid_marks.php" method="POST" onsubmit="submitMidMarks(event)">
+                <input type="hidden" id="mid_marks_student_id" name="student_id">
+                <input type="hidden" id="mid_marks_module_id" name="module_id">
+                <label for="mid_marks">Mid Marks (0-20):</label>
+                <input type="number" id="mid_marks" name="mid_marks" min="0" max="20" required>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+    </div>
 </body>
 </html>
-

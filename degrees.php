@@ -23,6 +23,12 @@ include('config.php');
         function closeModal() {
             document.getElementById('addModuleModal').style.display = 'none';
         }
+
+        function confirmDelete(moduleId) {
+            if (confirm('Are you sure you want to delete this module?')) {
+                window.location.href = 'delete_module.php?id=' + moduleId;
+            }
+        }
     </script>
 </head>
 <body>
@@ -73,7 +79,7 @@ include('config.php');
                 <label for="module_name">Module Name:</label>
                 <input type="text" id="module_name" name="module_name" required><br><br>
                 <label for="module_code">Module Code:</label>
-                <input type="text" name="module_code" id="module_code"><br><br>
+                <input type="text" name="module_code" id="module_code" required><br><br>
                 <input type="submit" value="Add Module">
             </form>
         </div>
@@ -89,16 +95,22 @@ include('config.php');
         echo "<h4>Degree: " . $degree_row['degree_name'] . "</h4>";
         
         // Fetch modules for this degree
-        $modules_sql = "SELECT id, module_name, module_code FROM modules WHERE degree_id = " . $degree_row['id'];
+        $modules_sql = "SELECT id, module_name, module_code, year, semester FROM modules WHERE degree_id = " . $degree_row['id'];
         $modules_result = $conn->query($modules_sql);
 
         if ($modules_result->num_rows > 0) {
             echo "<table>";
-            echo "<tr><th>Module Name</th><th>Module Code</th></tr>";
+            echo "<tr><th>Module Name</th><th>Module Code</th><th>Year</th><th>Semester</th><th>Actions</th></tr>";
             while ($module_row = $modules_result->fetch_assoc()) {
                 echo "<tr>";
                 echo "<td>" . $module_row['module_name'] . "</td>";
                 echo "<td>" . $module_row['module_code'] . "</td>";
+                echo "<td>" . $module_row['year'] . "</td>";
+                echo "<td>" . $module_row['semester'] . "</td>";
+                echo "<td>
+                        <button onclick=\"window.location.href='edit_module.php?id=" . $module_row['id'] . "'\">Edit</button>
+                        <button onclick='confirmDelete(" . $module_row['id'] . ")'>Delete</button>
+                      </td>";
                 echo "</tr>";
             }
             echo "</table>";
@@ -107,6 +119,5 @@ include('config.php');
         }
     }
     ?>
-
 </body>
 </html>
