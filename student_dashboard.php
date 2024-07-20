@@ -75,10 +75,10 @@ include('config.php');
     </h2>
     <div class="container">
         <div class="options">
-            <div class="option">
+            <!-- <div class="option">
                 <h3>Select Modules</h3>
                 <button onclick="location.href='select_modules.php'">Select Modules</button>
-            </div>
+            </div> -->
             <div class="option">
                 <h3>View Results</h3>
                 <button onclick="location.href='view_results.php'">View Results</button>

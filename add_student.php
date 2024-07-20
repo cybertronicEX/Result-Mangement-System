@@ -24,12 +24,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_id = $stmt->insert_id;
 
         // Create student entry
-        $sql = "INSERT INTO students (user_id, degree_id, enroll_year, current_semester,student_name) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO students (user_id, degree_id, enroll_year, current_semester, student_name) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("iiiis", $user_id, $degree_id, $enroll_year, $current_semester, $student_name);
 
         if ($stmt->execute()) {
-            echo "<script>alert('Student added successfully!'); window.location.href = 'student_list.php';</script>";
+            // Get the student ID
+            $student_id = $stmt->insert_id;
+
+            // Retrieve the list of modules for the degree
+            $sql = "SELECT id, year, semester FROM modules WHERE degree_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $degree_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            // Insert entries into the student_modules table
+            $insert_sql = "INSERT INTO student_modules (student_id, module_id, year, semester) VALUES (?, ?, ?, ?)";
+            $insert_stmt = $conn->prepare($insert_sql);
+
+            while ($row = $result->fetch_assoc()) {
+                $module_id = $row['id'];
+                $module_year = $row['year'];
+                $module_semester = $row['semester'];
+                $insert_stmt->bind_param("iiii", $student_id, $module_id, $module_year, $module_semester);
+                $insert_stmt->execute();
+            }
+
+            $insert_stmt->close();
+            echo "<script>alert('Student and modules added successfully!'); window.location.href = 'student_list.php';</script>";
         } else {
             echo "<script>alert('Error: " . $stmt->error . "'); window.location.href = 'student_list.php';</script>";
         }
