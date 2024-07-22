@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 if ($_SESSION['role'] != 'student') {
     header("Location: login.php");
     exit;
@@ -49,45 +51,59 @@ function calculate_gpa($grades, $grade_points) {
 }
 
 // Retrieve and display GPAs
-function display_results($conn, $student_id, $degree_id, $enroll_year, $current_semester, $grade_points) {
+function display_results($conn, $student_id, $degree_id, $current_semester, $grade_points) {
     $results = [];
-    $cumulative_grades = [];
+    $cumulative_gpa_sum = 0;
+    $years_count = 0;
 
     // Retrieve results by year
-    for ($year = 1; $year <= $enroll_year; $year++) {
-        $sql = "SELECT m.module_name, COALESCE(g.grade, 'N/A') AS grade
-                FROM modules m
-                LEFT JOIN grades g ON m.id = g.module_id AND g.student_id = ?
-                WHERE m.year = ? AND m.degree_id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iii", $student_id, $year, $degree_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        $grades = [];
-        $modules = [];
-        $all_grades_present = true;
-        while ($row = $result->fetch_assoc()) {
-            if ($row['grade'] == 'N/A') {
-                $all_grades_present = false;
-            }
-            $grades[] = $row['grade'];
-            $cumulative_grades[] = $row['grade'];
-            $modules[] = $row;
-        }
-        $stmt->close();
+    for ($year = 1; $year <= $current_semester; $year++) {
+        $semesters = [];
+        for ($semester = 1; $semester <= 2; $semester++) {
+            $sql = "SELECT m.module_name, COALESCE(g.grade, 'N/A') AS grade, COALESCE(g.mid_marks, 'N/A') AS mid_marks
+                    FROM modules m
+                    LEFT JOIN grades g ON m.id = g.module_id AND g.student_id = ?
+                    WHERE m.year = ? AND m.semester = ? AND m.degree_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iiii", $student_id, $year, $semester, $degree_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        $yearly_gpa = $all_grades_present ? calculate_gpa($grades, $grade_points) : 'N/A';
+            $grades = [];
+            $modules = [];
+            $all_grades_present = true;
+            while ($row = $result->fetch_assoc()) {
+                if ($row['grade'] == 'N/A') {
+                    $all_grades_present = false;
+                }
+                $grades[] = $row['grade'];
+                $modules[] = $row;
+            }
+            $stmt->close();
+
+            $semesters[$semester] = [
+                'data' => $modules,
+                'gpa' => $all_grades_present ? calculate_gpa($grades, $grade_points) : 'N/A'
+            ];
+        }
+
+        // Calculate yearly GPA
+        $yearly_grades = array_merge(
+            array_column($semesters[1]['data'], 'grade'),
+            array_column($semesters[2]['data'], 'grade')
+        );
+        $yearly_gpa = calculate_gpa($yearly_grades, $grade_points);
+        $cumulative_gpa_sum += $yearly_gpa;
+        $years_count++;
+
         $results[$year] = [
-            'data' => $modules,
-            'gpa' => $yearly_gpa
+            'semesters' => $semesters,
+            'yearly_gpa' => $yearly_gpa
         ];
     }
 
     // Calculate cumulative GPA
-    $cumulative_gpa = calculate_gpa(array_filter($cumulative_grades, function($grade) use ($grade_points) {
-        return isset($grade_points[$grade]);
-    }), $grade_points);
+    $cumulative_gpa = $years_count > 0 ? $cumulative_gpa_sum / $years_count : 0;
 
     return [
         'results' => $results,
@@ -95,7 +111,7 @@ function display_results($conn, $student_id, $degree_id, $enroll_year, $current_
     ];
 }
 
-$results_data = display_results($conn, $student_id, $degree_id, $enroll_year, $current_semester, $grade_points);
+$results_data = display_results($conn, $student_id, $degree_id, $current_semester, $grade_points);
 ?>
 
 <!DOCTYPE html>
@@ -120,10 +136,18 @@ $results_data = display_results($conn, $student_id, $degree_id, $enroll_year, $c
             padding: 10px;
             margin: 0;
         }
+        .box {
+            border: 1px solid #0056b3;
+            border-radius: 15px;
+            background-color: white;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         table, th, td {
             border: 1px solid #0056b3;
@@ -147,23 +171,30 @@ $results_data = display_results($conn, $student_id, $degree_id, $enroll_year, $c
         <h3>Cumulative GPA: <?php echo number_format($results_data['cumulative_gpa'], 2); ?></h3>
 
         <?php foreach ($results_data['results'] as $year => $data): ?>
-            <h3>Year <?php echo $year; ?> GPA: <?php echo is_numeric($data['gpa']) ? number_format($data['gpa'], 2) : 'N/A'; ?></h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Module</th>
-                        <th>Grade</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($data['data'] as $row): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($row['module_name']); ?></td>
-                            <td><?php echo htmlspecialchars($row['grade']); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <div class="box">
+                <h3>Year <?php echo $year; ?> GPA: <?php echo number_format($data['yearly_gpa'], 2); ?></h3>
+                <?php foreach ($data['semesters'] as $semester => $semester_data): ?>
+                    <h4>Semester <?php echo $semester; ?></h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Mid-term Marks</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($semester_data['data'] as $row): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($row['module_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['mid_marks']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['grade']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endforeach; ?>
+            </div>
         <?php endforeach; ?>
     </div>
 </body>
