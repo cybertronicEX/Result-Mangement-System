@@ -24,8 +24,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $row = $check_result->fetch_assoc();
         $check_stmt->close();
 
-        if ($row['count'] >= 2) {
-            echo "<script>alert('There can only be 2 modules per semester for a year.'); window.location.href = 'degrees.php';</script>";
+        if ($row['count'] >= 4) {
+            echo "<script>alert('There can only be 4 modules per semester for a year.'); window.location.href = 'degrees.php';</script>";
         } else {
             // Prepare SQL statement
             $sql = "INSERT INTO modules (degree_id, year, semester, module_name, module_code) VALUES (?, ?, ?, ?, ?)";
