@@ -26,6 +26,8 @@ button:hover {
     background-color: #0056b3;
 }
 
+
+
 /* Styles for modal dialog */
 .modal {
     display: none;
@@ -115,4 +117,52 @@ tr:nth-child(even) {
 }
 tr:hover {
     background-color: #ddd;
+}
+
+
+/* Styles for the action buttons in the student list */
+.action-buttons {
+    display: flex;
+    align-items: center; /* Center align items vertically */
+    gap: 10px; /* Space between buttons */
+}
+
+/* Override styles to ensure it doesn't affect other buttons */
+.action-buttons button,
+.action-buttons form input[type='submit'] {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.action-buttons button:hover,
+.action-buttons form input[type='submit']:hover {
+    background-color: #0056b3;
+}
+
+.action-buttons form input[type='submit'] {
+    background-color: #dc3545;
+}
+
+.action-buttons form input[type='submit']:hover {
+    background-color: #c82333;
+}
+
+/* Styles for the Add Student button */
+.add-student-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-student-button:hover {
+    background-color: #888;
 }

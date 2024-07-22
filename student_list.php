@@ -14,6 +14,29 @@ include('config.php');
 <head>
     <title>Student List</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <style>
+        .modal-content .password-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-content .password {
+            flex: 1;
+            /* padding: 5px; */
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        .modal-content .show-password {
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-content .show-password label {
+            margin-left: 5px;
+        }
+
+    </style>
     <script>
         // Function to show modal dialog
         function showModal() {
@@ -38,13 +61,23 @@ include('config.php');
         function closeEditModal() {
             document.getElementById('editStudentModal').style.display = 'none';
         }
+         // Function to toggle password visibility
+         function togglePasswordVisibility(passwordFieldId, checkboxId) {
+            var passwordField = document.getElementById(passwordFieldId);
+            var checkbox = document.getElementById(checkboxId);
+            if (checkbox.checked) {
+                passwordField.type = 'text';
+            } else {
+                passwordField.type = 'password';
+            }
+        }
     </script>
 </head>
 <body>
     <h2>Student List</h2>
 
     <!-- Button to open modal -->
-    <button onclick="showModal()">Add Student</button>
+    <button class="add-student-button" onclick="showModal()">Add Student</button>
 
     <!-- Modal dialog for adding student -->
     <div id="addStudentModal" class="modal">
@@ -55,7 +88,13 @@ include('config.php');
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required><br><br>
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br><br>
+                <span class="password-container">
+                    <input class="password" type="password" id="password" name="password" required>
+                    <span class="show-password">
+                        <input type="checkbox" id="showPasswordAdd" onclick="togglePasswordVisibility('password', 'showPasswordAdd')">
+                        
+                    </span>
+                </span><br><br>
                 <label for="degree">Degree Program:</label>
                 <select id="edit_degree" name="degree" required>
                 <?php
@@ -142,22 +181,29 @@ include('config.php');
                     <th>Student Name</th>
                     <th>Actions</th>
                 </tr>";
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>
-                    <td>" . $row['username'] . "</td>
-                    <td>" . $row['degree_name'] . "</td>
-                    <td>" . $row['enroll_year'] . "</td>
-                    <td>" . $row['current_semester'] . "</td>
-                    <td>" . $row['student_name'] . "</td>
-                    <td>
-                        <button onclick=\"showEditModal('" . $row['id'] . "', '" . $row['username'] . "', '" . $row['degree_name'] . "', '" . $row['enroll_year'] . "', '" . $row['current_semester'] . "', '" . $row['student_name'] . "')\">Edit</button>
-                        <form action='delete_student.php' method='POST' style='display:inline-block;'>
-                            <input type='hidden' name='student_id' value='" . $row['id'] . "'>
-                            <input type='submit' value='Delete' onclick=\"return confirm('Are you sure you want to delete this student?');\">
-                        </form>
-                    </td>
-                  </tr>";
-        }
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                            <td>" . htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>" . htmlspecialchars($row['degree_name'], ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>" . htmlspecialchars($row['enroll_year'], ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>" . htmlspecialchars($row['current_semester'], ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>" . htmlspecialchars($row['student_name'], ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>
+                                <div class='action-buttons'>
+                                    <button style='background-color: #007BFF; color: white; border: none; padding: 10px 20px; font-size: 16px; margin-right: 5px; border-radius: 5px; cursor: pointer;' 
+                                            onclick=\"showEditModal('" . htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') . "', '" . htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8') . "', '" . htmlspecialchars($row['degree_name'], ENT_QUOTES, 'UTF-8') . "', '" . htmlspecialchars($row['enroll_year'], ENT_QUOTES, 'UTF-8') . "', '" . htmlspecialchars($row['current_semester'], ENT_QUOTES, 'UTF-8') . "', '" . htmlspecialchars($row['student_name'], ENT_QUOTES, 'UTF-8') . "')\">
+                                        Edit
+                                    </button>
+                                    <form action='delete_student.php' method='POST' style='display: inline; margin: 0;'>
+                                        <input type='hidden' name='student_id' value='" . htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') . "'>
+                                        <input type='submit' value='Delete' style='background-color: #dc3545; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer;' 
+                                               onclick=\"return confirm('Are you sure you want to delete this student?');\">
+                                    </form>
+                                </div>
+                            </td>
+                          </tr>";
+                }
+                
         echo "</table>";
     } else {
         echo "No students found.";

@@ -84,6 +84,7 @@ $conn->close();
 
         function closeModal() {
             document.getElementById('editDegreeModal').style.display = 'none';
+            window.location.href = 'degrees.php'; // Redirect to degrees page on close
         }
     </script>
 </head>
