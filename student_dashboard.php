@@ -12,59 +12,129 @@ include('config.php');
 <html>
 <head>
     <title>Student Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            text-align: center;
-        }
-        .container {
-            width: 80%;
-            margin: 0 auto;
-        }
-        h2 {
-            background-color: #0056b3;
-            color: white;
-            padding: 10px;
-            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             position: relative;
         }
-        .logout-button {
+
+        .background {
             position: absolute;
-            right: 20px;
-            top: 10px;
-            background-color: #0056b3;
-            padding: 5px 10px;
+            left: 0;
+            top: 20%;
+            /* bottom: 0;
+            width: 40%; */
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .background img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            background-color:#007BFF;
+            color: white;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+            margin: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-button {
+            padding: 5px 15px;
             color: white;
             border-radius: 5px;
             text-decoration: none;
             font-size: 16px;
+            background-color: rgba(0, 86, 179, 0.9);
+            transition: background-color 0.3s;
+            width: 10%;
+            margin-right:2%;
         }
-        .options {
+
+        .logout-button:hover {
+            background-color: #003d80;
+        }
+
+        .main-content {
+            margin-top: 80px; /* Adjust this to give space for the fixed header */
             display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: calc(100% - 80px); /* Subtract the height of the fixed header */
         }
+
+        .options {
+            list-style-type: none;
+            margin: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
         .option {
-            background-color: #ffffff;
-            border: 1px solid #0056b3;
-            border-radius: 5px;
-            padding: 20px;
-            width: 45%;
+            width: 100%;
+            height: 25%;
+            margin: 10px 0;
+            padding-top: 1%;
         }
+
         button {
-            background-color: #0056b3;
+            text-decoration: none;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
+            padding: 20px 30px;
+            background-color: rgba(0, 86, 179, 0.9);
             border-radius: 5px;
-            font-size: 16px;
+            transition: background-color 0.3s;
+            width: calc(100% - 10px);
+            text-align: left;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
         }
+
         button:hover {
             background-color: #003d80;
+        }
+
+        .icon {
+            margin-right: 15px;
+            font-size: 24px;
         }
     </style>
 </head>
@@ -73,15 +143,20 @@ include('config.php');
         Welcome, <?php echo $_SESSION['username']; ?>
         <a href="logout.php" class="logout-button">Logout</a>
     </h2>
-    <div class="container">
-        <div class="options">
-            <!-- <div class="option">
-                <h3>Select Modules</h3>
-                <button onclick="location.href='select_modules.php'">Select Modules</button>
-            </div> -->
-            <div class="option">
-                <h3>View Results</h3>
-                <button onclick="location.href='view_results.php'">View Results</button>
+    <div class="main-content">
+        <div class="background">
+            <img src="student_dashboard_background.png" alt="background" />
+        </div>
+        <div class="container">
+            <div class="options">
+                <!-- <div class="option">
+                    <h3>Select Modules</h3>
+                    <button onclick="location.href='select_modules.php'"><i class="fas fa-book icon"></i>Select Modules</button>
+                </div> -->
+                <div class="option">
+                    <h3>Dashboard</h3>
+                    <button onclick="location.href='view_results.php'"><i class="fas fa-chart-bar icon"></i>View Results</button>
+                </div>
             </div>
         </div>
     </div>
